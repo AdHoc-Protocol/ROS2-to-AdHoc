@@ -17,58 +17,53 @@ field always means the ROS file stated a real bound. Anything the converter coul
 
 ## Before and after
 
-`sensor_msgs/msg/NavSatFix.msg`, 45 lines — a ROS 2 protocol has no single file of 500-1000 lines, because it is
-a package of many small ones (`sensor_msgs` is 28 files, 728 lines together); this is the most recognisable
-message of the most recognisable package.
-[source](samples/ros2_interfaces/sensor_msgs/msg/NavSatFix.msg) · [result](AdHoc/ros2_interfaces.cs)
+`sensor_msgs/msg/BatteryState.msg`, 48 non-blank lines of which 39 are declarations — the densest message in the
+sample set, and one every ROS developer knows. A ROS 2 protocol has no single file of 500-1000 lines, because it
+is a package of many small ones (`sensor_msgs` alone is 28 files, 728 lines together).
+[source](samples/ros2_interfaces/sensor_msgs/msg/BatteryState.msg) · [result](AdHoc/ros2_interfaces.cs)
 
 ```python
-# Navigation Satellite fix for any Global Navigation Satellite System
-#
-# Specified using the WGS 84 reference ellipsoid
+# Power supply status constants
+uint8 POWER_SUPPLY_STATUS_UNKNOWN = 0
+uint8 POWER_SUPPLY_STATUS_CHARGING = 1
+uint8 POWER_SUPPLY_STATUS_DISCHARGING = 2
+uint8 POWER_SUPPLY_STATUS_NOT_CHARGING = 3
+uint8 POWER_SUPPLY_STATUS_FULL = 4
+# ... POWER_SUPPLY_HEALTH_* and POWER_SUPPLY_TECHNOLOGY_* constants ...
+uint8 POWER_SUPPLY_TECHNOLOGY_VRLA = 8    # Valve Regulated Lead-Acid battery
 
-# header.stamp specifies the ROS time for this measurement (the
-#        corresponding satellite time may be reported using the
-#        sensor_msgs/TimeReference message).
-std_msgs/Header header
+std_msgs/Header  header
+float32 voltage          # Voltage in Volts (Mandatory)
+float32 temperature      # Temperature in Degrees Celsius (If unmeasured NaN)
+float32 percentage       # Charge percentage on 0 to 1 range  (If unmeasured NaN)
+uint8   power_supply_status     # The charging status as reported. Values defined above
+bool    present          # True if the battery is present
 
-# Satellite fix status information.
-NavSatStatus status
-
-# Latitude [degrees]. Positive is north of equator; negative is south.
-float64 latitude
-...
-# Position covariance [m^2] defined relative to a tangential plane
-# through the reported position. The components are East, North, and
-# Up (ENU), in row-major order.
-float64[9] position_covariance
-
-uint8 COVARIANCE_TYPE_UNKNOWN = 0
-uint8 COVARIANCE_TYPE_APPROXIMATED = 1
-...
+float32[] cell_voltage   # An array of individual cell voltages for each cell in the pack
+string location          # The location into which the battery is inserted. (slot number or plug)
+string serial_number     # The best approximation of the battery serial number
 ```
 
 ```csharp
-public class NavSatFix {
+public class BatteryState {
     /**
-    header.stamp specifies the ROS time for this measurement (the
-    corresponding satellite time may be reported using the
-    sensor_msgs/TimeReference message).
+    Power supply status constants
     */
+    const byte POWER_SUPPLY_STATUS_UNKNOWN = 0;
+    const byte POWER_SUPPLY_STATUS_CHARGING = 1;
+    const byte POWER_SUPPLY_STATUS_DISCHARGING = 2;
+    const byte POWER_SUPPLY_STATUS_NOT_CHARGING = 3;
+    const byte POWER_SUPPLY_STATUS_FULL = 4;
+    // ... POWER_SUPPLY_HEALTH_* and POWER_SUPPLY_TECHNOLOGY_* constants ...
+    const byte POWER_SUPPLY_TECHNOLOGY_VRLA = 8;
     std_msgs.msg.Header header;
-    /**
-    Satellite fix status information.
-    */
-    sensor_msgs.msg.NavSatStatus status;
-    /**
-    Latitude [degrees]. Positive is north of equator; negative is south.
-    */
-    double latitude;
+    float voltage;
     // ...
-    [D(9)] double[] position_covariance;
-    const byte COVARIANCE_TYPE_UNKNOWN = 0;
-    const byte COVARIANCE_TYPE_APPROXIMATED = 1;
-    // ...
+    byte power_supply_status;
+    bool present;
+    float[,,] cell_voltage;
+    string location;
+    string serial_number;
 }
 
 public class Header {                          // std_msgs/Header, referenced above
@@ -77,11 +72,24 @@ public class Header {                          // std_msgs/Header, referenced ab
 }
 ```
 
-The header's two-integer ROS timestamp is gone: `builtin_interfaces/Time` is a wall-clock instant, and AdHoc has
-one, so `Header.stamp` is a `DateTime` and the `sec`/`nanosec` pair never reaches the wire. `float64[9]` keeps its
-constant length as `[D(9)]`, the `uint8` constants become `const byte`, and the `#` blocks become doc comments the
-agent pools with the Dashboard line, so `KeepDoc` filters can route on them. A service goes further — the whole
-request/response pair collapses into one line inside the connection:
+Every `uint8 NAME = N` survives as a `const byte`, so the values stay with the message instead of being flattened
+into an enum ROS never declared. The header's two-integer ROS timestamp is gone: `builtin_interfaces/Time` is a
+wall-clock instant and AdHoc has one, so `Header.stamp` is a `DateTime` and the `sec`/`nanosec` pair never reaches
+the wire. The unbounded `float32[] cell_voltage` becomes a list `float[,,]` with **no** `[D]`, because ROS states
+no bound — its ceiling comes from the project-wide `_DefaultMaxLengthOf`, and a `[D(...)]` anywhere in the output
+therefore always means the `.msg` stated a real bound. Trailing `#` comments become doc comments the agent pools
+with the Dashboard line, so `KeepDoc` filters can route on them.
+
+A service goes further still — the whole request/response pair collapses into one line inside the connection
+([source](samples/ros2_interfaces/nav_msgs/srv/GetPlan.srv)):
+
+```python
+geometry_msgs/PoseStamped start
+geometry_msgs/PoseStamped goal
+float32 tolerance
+---
+Path plan
+```
 
 ```csharp
 (L____________, nav_msgs.srv.GetPlan_Response) nav_msgs_GetPlan(nav_msgs.srv.GetPlan_Request req);
