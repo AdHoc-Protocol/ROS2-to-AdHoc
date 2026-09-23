@@ -15,6 +15,78 @@ ceilings AdHoc needs for what ROS leaves unbounded are stated once in `_DefaultM
 field always means the ROS file stated a real bound. Anything the converter could not carry over is marked with a
 `// DROPPED:` comment at the place it was dropped.
 
+## Before and after
+
+`sensor_msgs/msg/NavSatFix.msg`, 45 lines — a ROS 2 protocol has no single file of 500-1000 lines, because it is
+a package of many small ones (`sensor_msgs` is 28 files, 728 lines together); this is the most recognisable
+message of the most recognisable package.
+[source](samples/ros2_interfaces/sensor_msgs/msg/NavSatFix.msg) · [result](AdHoc/ros2_interfaces.cs)
+
+```python
+# Navigation Satellite fix for any Global Navigation Satellite System
+#
+# Specified using the WGS 84 reference ellipsoid
+
+# header.stamp specifies the ROS time for this measurement (the
+#        corresponding satellite time may be reported using the
+#        sensor_msgs/TimeReference message).
+std_msgs/Header header
+
+# Satellite fix status information.
+NavSatStatus status
+
+# Latitude [degrees]. Positive is north of equator; negative is south.
+float64 latitude
+...
+# Position covariance [m^2] defined relative to a tangential plane
+# through the reported position. The components are East, North, and
+# Up (ENU), in row-major order.
+float64[9] position_covariance
+
+uint8 COVARIANCE_TYPE_UNKNOWN = 0
+uint8 COVARIANCE_TYPE_APPROXIMATED = 1
+...
+```
+
+```csharp
+public class NavSatFix {
+    /**
+    header.stamp specifies the ROS time for this measurement (the
+    corresponding satellite time may be reported using the
+    sensor_msgs/TimeReference message).
+    */
+    std_msgs.msg.Header header;
+    /**
+    Satellite fix status information.
+    */
+    sensor_msgs.msg.NavSatStatus status;
+    /**
+    Latitude [degrees]. Positive is north of equator; negative is south.
+    */
+    double latitude;
+    // ...
+    [D(9)] double[] position_covariance;
+    const byte COVARIANCE_TYPE_UNKNOWN = 0;
+    const byte COVARIANCE_TYPE_APPROXIMATED = 1;
+    // ...
+}
+
+public class Header {                          // std_msgs/Header, referenced above
+    DateTime stamp; // was builtin_interfaces/Time (int32 sec + uint32 nanosec); ns resolution dropped
+    string frame_id;
+}
+```
+
+The header's two-integer ROS timestamp is gone: `builtin_interfaces/Time` is a wall-clock instant, and AdHoc has
+one, so `Header.stamp` is a `DateTime` and the `sec`/`nanosec` pair never reaches the wire. `float64[9]` keeps its
+constant length as `[D(9)]`, the `uint8` constants become `const byte`, and the `#` blocks become doc comments the
+agent pools with the Dashboard line, so `KeepDoc` filters can route on them. A service goes further — the whole
+request/response pair collapses into one line inside the connection:
+
+```csharp
+(L____________, nav_msgs.srv.GetPlan_Response) nav_msgs_GetPlan(nav_msgs.srv.GetPlan_Request req);
+```
+
 ## Links
 
 | What                                              | Where                                                                    |
@@ -120,7 +192,7 @@ namespace org.ros2 {
 | `T[]`                              | `T[,,]`                             | no `[D]`: the ceiling comes from `_DefaultMaxLengthOf.Arrays` |
 | `builtin_interfaces/Time`          | `DateTime`                          | AdHoc's native wall-clock type; the `sec`/`nanosec` pair is **not** emitted as a pack |
 | `builtin_interfaces/Duration`      | `ROS_Duration` (`class … : Duration`) | elapsed time, bit-sized from `max` / `precision`; the raw pair is **not** emitted as a pack |
-| any integer field                  | plain type, **no** `[A]`/`[V]`/`[X]` | ROS 2 states nothing about a value's distribution, and a varint attribute on a uniformly distributed field makes the wire bigger. Add them by hand where you know the data |
+| any integer field                  | plain type, plus a `// physics:` comment where a hint exists | a `.msg` never states where a field's values sit, so no `[A]`/`[V]`/`[X]` is emitted — but the question is asked at the field, see [below](#varint-is-your-decision-asked-at-the-field) |
 | `pkg/Name`, `Name`                 | `pkg.msg.Name`                      | sub-pack; an **empty** message becomes `bool` (presence flag), which is what AdHoc does anyway |
 | `TYPE NAME=VALUE`                  | `const TYPE NAME = VALUE;`          | hex / binary / octal integers converted to decimal           |
 | `TYPE name VALUE` (default)        | `[Default("VALUE")] TYPE name;`     | custom attribute, value kept as written in the file          |
@@ -128,6 +200,35 @@ namespace org.ros2 {
 
 Names that are keywords in any AdHoc target language are renamed the way AdHocAgent does it
 (`type` → `Type`); a field named like its own pack gets a numeric suffix.
+
+## Varint is your decision, asked at the field
+
+AdHoc can shrink an integer to the distance between its value and a base you declare — `[A]` when the values sit
+near a floor, `[V]` near a ceiling, `[X]` around a centre, `[MinMax]` when the range is hard and narrow. What
+decides this is the **physics of the field**, where its values actually sit, and a `.msg` file never says: it
+gives a type and a name. How ROS itself stores the number decides nothing either, because AdHoc lays out its own
+frame.
+
+So the converter emits no attribute. It does not stay silent either: where the field name, its `#` comment or a
+neighbouring constant gives a usable hint, and the field is an integer wider than one byte, it leaves the
+question on the field with the candidate and the reason.
+
+```csharp
+// physics: a sequence_number has a floor at 0 and no ceiling, and stays small in practice → consider [A]
+uint sequence_number;
+
+// physics: an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width
+ulong unique_id;
+
+// physics: wall-clock seconds are ~1.7e9 today, past the 268 435 455 varint break-even → leave fixed-width (or use DateTime)
+int sec;
+```
+
+43 such comments are generated for the shipped samples. The arithmetic behind them: varint pays while the typical
+distance from the base stays under roughly two million, breaks even up to 268 435 455 and always loses beyond it,
+so systematically large values (timestamps, scaled coordinates, ids, hashes) are worse off with it than without.
+A span narrower than one byte is not a varint case at all — the generator rejects it and `[MinMax]` bit-packs it
+instead. One-byte types (`bool`, `byte`, `sbyte`) and floats are never candidates, and are never commented on.
 
 ## Validation result
 
@@ -155,9 +256,9 @@ actors (one per service) and 3 action actors.
 - Unbounded sequences and strings need a ceiling in AdHoc, set project-wide to 65 535 in `_DefaultMaxLengthOf`.
   That is a guess: lower it per field with `[D(+N)]` / `[D(N)]`, and raise it for payloads such as
   `sensor_msgs/Image.data`, which is a full frame.
-- **No varint attributes are emitted.** `[A]`/`[V]`/`[X]` only pay off when you know where a field's values sit,
-  and a ROS interface file never says. Adding them where you do know (a monotonic sequence number, a percentage,
-  a temperature delta) is the single most valuable hand-edit after conversion.
+- **No varint attributes are emitted**, only `// physics:` comments proposing them — see
+  [below](#varint-is-your-decision-asked-at-the-field). Acting on those comments is the single most valuable
+  hand-edit after conversion.
 - Every type a bundle references must be in the bundle (the converter warns and leaves an `// unresolved` comment,
   and the agent then fails to compile the file). `fetch-samples.sh` therefore also pulls `unique_identifier_msgs`
   and installs `test_interface_files` under its ROS package name `test_msgs`.

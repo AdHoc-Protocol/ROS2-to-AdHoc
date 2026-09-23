@@ -526,6 +526,7 @@ namespace org.ros2 {
                     /**
                     A unique identifier for the loaded node.
                     */
+                    // physics: an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width
                     ulong unique_id;
                 }
 
@@ -536,6 +537,7 @@ namespace org.ros2 {
                     /**
                     Container specific unique id of a loaded node.
                     */
+                    // physics: an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width
                     ulong unique_id;
                 }
 
@@ -915,6 +917,7 @@ namespace org.ros2 {
                     /**
                     size of given dimension (in type units)
                     */
+                    // physics: a size has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint size;
                     /**
                     stride of given dimension
@@ -1164,6 +1167,7 @@ namespace org.ros2 {
                     /**
                     Goal
                     */
+                    // physics: an order has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     int order;
                 }
 
@@ -1174,6 +1178,7 @@ namespace org.ros2 {
                     /**
                     Result
                     */
+                    // physics: a sequence has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     int[,,] sequence;
                 }
 
@@ -1184,6 +1189,7 @@ namespace org.ros2 {
                     /**
                     Feedback
                     */
+                    // physics: a sequence has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     int[,,] sequence;
                 }
             }
@@ -1305,6 +1311,7 @@ namespace org.ros2 {
                 */
                 public class PolygonInstance {
                     geometry_msgs.msg.Polygon polygon;
+                    // physics: an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width
                     long id;
                 }
 
@@ -1885,10 +1892,12 @@ namespace org.ros2 {
                     /**
                     Map width [cells]
                     */
+                    // physics: a width has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint width;
                     /**
                     Map height [cells]
                     */
+                    // physics: a height has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint height;
                     /**
                     The origin of the map [m, m, rad].  This is the real-world pose of the
@@ -2164,6 +2173,7 @@ namespace org.ros2 {
                     e.g. if the range is defined as {from_value: 2, to_value: 5, step: 2} then
                     the valid values will be 2, 4, and 5.
                     */
+                    // physics: a step has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     ulong step;
                 }
 
@@ -2247,6 +2257,7 @@ namespace org.ros2 {
                     /**
                     The line in the file the message came from.
                     */
+                    // physics: a line has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint line;
                 }
 
@@ -2267,6 +2278,7 @@ namespace org.ros2 {
                     /**
                     The logger level
                     */
+                    // physics: a level has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint level;
                 }
 
@@ -2576,6 +2588,7 @@ namespace org.ros2 {
                     Relative depth from given prefixes to return.
                     Use DEPTH_RECURSIVE to get the recursive parameters and prefixes for each prefix.
                     */
+                    // physics: a depth has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     ulong depth;
                 }
 
@@ -2746,6 +2759,7 @@ namespace org.ros2 {
                     /**
                     Depth of the message queue (only meaningful when history==KEEP_LAST)
                     */
+                    // physics: a depth has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint depth;
                     /**
                     Deadline between messages (0 for no deadline)
@@ -3032,7 +3046,9 @@ namespace org.ros2 {
                     The image dimensions with which the camera was calibrated.
                     Normally this will be the full camera resolution in pixels.
                     */
+                    // physics: a height has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint height;
+                    // physics: a width has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint width;
                     /**
                     The distortion model used. Supported models are listed in
@@ -3107,7 +3123,9 @@ namespace org.ros2 {
                     The default values binning_x = binning_y = 0 is considered the same
                     as binning_x = binning_y = 1 (no subsampling).
                     */
+                    // physics: a binning_x has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint binning_x;
+                    // physics: a binning_y has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint binning_y;
                     /**
                     Region of interest (subwindow of full camera resolution), given in
@@ -3273,10 +3291,12 @@ namespace org.ros2 {
                     the behavior is undefined
                     image height, that is, number of rows
                     */
+                    // physics: a height has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint height;
                     /**
                     image width, that is, number of columns
                     */
+                    // physics: a width has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint width;
                     /**
                     The legal values for encoding are in file include/sensor_msgs/image_encodings.hpp
@@ -3293,6 +3313,7 @@ namespace org.ros2 {
                     /**
                     Full row length in bytes
                     */
+                    // physics: a step has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint step;
                     /**
                     actual matrix data, size is (step * rows)
@@ -3721,7 +3742,9 @@ namespace org.ros2 {
                     2D structure of the point cloud. If the cloud is unordered, height is
                     1 and width is the length of the point cloud.
                     */
+                    // physics: a height has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint height;
+                    // physics: a width has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint width;
                     /**
                     Describes the channels and their layout in the binary data blob.
@@ -3734,10 +3757,12 @@ namespace org.ros2 {
                     /**
                     Length of a point in bytes
                     */
+                    // physics: a point_step has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint point_step;
                     /**
                     Length of a row in bytes
                     */
+                    // physics: a row_step has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint row_step;
                     /**
                     Actual point data, size is (row_step*height)
@@ -3781,6 +3806,7 @@ namespace org.ros2 {
                     /**
                     How many elements in the field
                     */
+                    // physics: a count has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint count;
                 }
 
@@ -3866,10 +3892,12 @@ namespace org.ros2 {
                     (0 if the ROI includes the top edge of the image)
                     Height of ROI
                     */
+                    // physics: a height has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint height;
                     /**
                     Width of ROI
                     */
+                    // physics: a width has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint width;
                     /**
                     True if a distinct rectified ROI should be calculated from the "raw"
@@ -4005,6 +4033,7 @@ namespace org.ros2 {
                     Sequence number for the request
                     Combined with the client ID, this creates a unique ID for the service transaction
                     */
+                    // physics: a sequence_number has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     long sequence_number;
                 }
             }
@@ -4467,6 +4496,7 @@ namespace org.ros2 {
                     /**
                     size of given dimension (in type units)
                     */
+                    // physics: a size has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     uint size;
                     /**
                     stride of given dimension
@@ -5157,6 +5187,7 @@ namespace org.ros2 {
                     /**
                     goal definition
                     */
+                    // physics: an order has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     int order;
                 }
 
@@ -5167,6 +5198,7 @@ namespace org.ros2 {
                     /**
                     result definition
                     */
+                    // physics: a sequence has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     int[,,] sequence;
                 }
 
@@ -5177,6 +5209,7 @@ namespace org.ros2 {
                     /**
                     feedback
                     */
+                    // physics: a sequence has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     int[,,] sequence;
                 }
 
@@ -5489,6 +5522,7 @@ namespace org.ros2 {
                     In the case of a bounded sequence, this is the maximum capacity of the sequence.
                     In all other cases this field is unused.
                     */
+                    // physics: a capacity has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     ulong capacity;
                     /**
                     Only used when the type is a fixed or bounded string/wstring, or a array/sequence of those.
@@ -5498,6 +5532,7 @@ namespace org.ros2 {
                     In the case of an array/sequence of bounded string/wstring, it is the maximum capacity of the strings.
                     It is not currently possible to have different string capacities per element in the array/sequence.
                     */
+                    // physics: a string_capacity has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     ulong string_capacity;
                     /**
                     Only used when the type is a nested type or array/sequence of nested types.
@@ -5665,6 +5700,7 @@ namespace org.ros2 {
                     /**
                     Unique id within the namespace.
                     */
+                    // physics: an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width
                     int id;
                     /**
                     One of the above types, e.g. CIRCLE, LINE_STRIP, etc.
@@ -5867,6 +5903,7 @@ namespace org.ros2 {
                     Contains the ID of the selected menu entry
                     Only valid for MENU_SELECT events.
                     */
+                    // physics: an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width
                     uint menu_entry_id;
                     /**
                     If event_type is BUTTON_CLICK, MOUSE_DOWN, or MOUSE_UP, mouse_point
@@ -5892,6 +5929,7 @@ namespace org.ros2 {
                     init topic after a successful initialization to avoid receiving
                     duplicate data.
                     */
+                    // physics: a seq_num has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     ulong seq_num;
                     /**
                     All markers.
@@ -5925,6 +5963,7 @@ namespace org.ros2 {
                     Sequence number.
                     The client will use this to detect if it has missed an update.
                     */
+                    // physics: a seq_num has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     ulong seq_num;
                     /**
                     Type holds the purpose of this message.  It must be one of UPDATE or KEEP_ALIVE.
@@ -5990,6 +6029,7 @@ namespace org.ros2 {
                     /**
                     Object ID used in conjunction with the namespace for manipulating and deleting the object later.
                     */
+                    // physics: an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width
                     int id;
                     /**
                     Type of object.
@@ -6104,11 +6144,13 @@ namespace org.ros2 {
                     ID is a number for each menu entry.  Must be unique within the
                     control, and should never be 0.
                     */
+                    // physics: an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width
                     uint id;
                     /**
                     ID of the parent of this menu entry, if it is a submenu.  If this
                     menu entry is a top-level entry, set parent_id to 0.
                     */
+                    // physics: an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width
                     uint parent_id;
                     /**
                     menu / entry title
@@ -6173,6 +6215,7 @@ namespace org.ros2 {
                     at the time the server received the request.
                     Clients use this to detect if any updates were missed.
                     */
+                    // physics: a sequence_number has a floor at 0 and no ceiling, and stays small in practice → consider [A]
                     ulong sequence_number;
                     /**
                     All interactive markers provided by the server.

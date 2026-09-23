@@ -385,9 +385,72 @@ public class ROS2ToAdHoc {
 			taken.add(cls); // a pack may not contain a member with its own name
 			for (Member m : s.members) {
 				doc(out, indent + I1, m.doc);
+				if (!m.constant) {
+					String hint = physicsHint(m);
+					if (hint != null) out.append(indent).append(I1).append("// physics: ").append(hint).append('\n');
+				}
 				out.append(indent).append(I1).append(m.constant ? constant(m, taken) : field(m, pkg, taken, i.file)).append('\n');
 			}
 			out.append(indent).append("}\n");
+		}
+
+		/**
+		 * The varint decision belongs to the developer, but the question must not be dropped silently. Where the
+		 * ROS field name or its `#` comment says something usable about where the values sit, this returns a
+		 * comment naming the candidate attribute and the reason. It never emits an attribute: a `.msg` file makes
+		 * no statement about a value's distribution, so a converter cannot take the decision.
+		 *
+		 * <p>Only integers wider than one byte are candidates: `byte`/`sbyte`/`bool` already span a byte or less,
+		 * and `float`/`double`/`string` are not integers, so AdHoc rejects the attributes on all of them.
+		 */
+		static String physicsHint(Member m) {
+			String cs = primitive(m.type.base);
+			if (cs == null) return null;
+			switch (cs) {
+				case "short": case "ushort": case "int": case "uint": case "long": case "ulong": break;
+				default: return null; // one-byte types, floats and strings are not varint candidates
+			}
+			boolean signed = cs.charAt(0) != 'u';
+			String n = m.name.toLowerCase();
+			String text = (n + " " + m.doc.toLowerCase()).replace('\n', ' ');
+
+			// A stated hard range beats everything: uniform in range, bit-packed, no varint.
+			Matcher r = RANGE.matcher(text);
+			if (r.find()) {
+				long lo = Long.parseLong(r.group(1)), hi = Long.parseLong(r.group(2));
+				if (lo < hi) return "the source states the range " + lo + "…" + hi + ", so the values are uniform in it → consider [MinMax(" + grouped(lo) + ", " + grouped(hi) + ")]";
+			}
+			if (text.contains("percent") || text.contains("[0, 100]") || text.contains("0-100"))
+				return "a percentage is a hard, narrow range → consider [MinMax(0, 100)], which bit-packs it below one byte";
+
+			// Systematically large values: varint always loses past 268 435 455, so say so rather than stay silent.
+			if (word(n, "sec|secs|seconds|timestamp|stamp|epoch|utime|unix"))
+				return "wall-clock seconds are ~1.7e9 today, past the 268 435 455 varint break-even → leave fixed-width (or use DateTime)";
+			if (word(n, "nanosec|nsec|nanoseconds|usec|microseconds"))
+				return "sub-second counts run to 1e9, past the 268 435 455 varint break-even → leave fixed-width";
+			if (word(n, "id|uid|uuid|guid|hash|checksum|crc|key|handle|token"))
+				return "an identifier or hash is spread over its whole type, which varint cannot shorten → leave fixed-width";
+
+			// Two-sided quantities, centred on zero.
+			if (signed && word(n, "delta|error|offset|diff|difference|residual|bias|correction|drift|shift|adjustment|deviation"))
+				return article(m.name) + " " + m.name + " is centred on zero and small either way → consider [X(amplitude)] once the real swing is known";
+
+			// One-sided quantities with a floor at zero and no ceiling.
+			if (word(n, "seq|sequence|seq_num|sequence_number|count|counter|num|number|size|length|len|capacity|index|level|order|depth|width|height|step|line|column|total|binning|samples|frames|attempts|retries|ticks"))
+				return article(m.name) + " " + m.name + " has a floor at 0 and no ceiling, and stays small in practice → consider [A]";
+
+			return null;
+		}
+
+		static final Pattern RANGE = Pattern.compile("range \\[(-?\\d+), ?(-?\\d+)[)\\]]");
+
+		static String article(String w) { return "aeiou".indexOf(Character.toLowerCase(w.charAt(0))) < 0 ? "a" : "an"; }
+
+		/** True when {@code name} contains one of the alternatives as a whole underscore-separated word. */
+		static boolean word(String name, String alternatives) {
+			for (String w : alternatives.split("\\|"))
+				if (name.equals(w) || name.startsWith(w + "_") || name.endsWith("_" + w) || name.contains("_" + w + "_")) return true;
+			return false;
 		}
 
 		String constant(Member m, Set<String> taken) {
