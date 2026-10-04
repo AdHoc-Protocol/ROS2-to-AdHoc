@@ -1,0 +1,30 @@
+# Where every sample comes from: <path in samples/> <page of the original>; a path ending with / covers every
+# file under it. Written by fetch-samples.sh; the converter links these pages in the headers of the descriptions.
+ros2_interfaces/action_msgs/                             https://github.com/ros2/rcl_interfaces/tree/rolling/action_msgs/
+ros2_interfaces/builtin_interfaces/                      https://github.com/ros2/rcl_interfaces/tree/rolling/builtin_interfaces/
+ros2_interfaces/composition_interfaces/                  https://github.com/ros2/rcl_interfaces/tree/rolling/composition_interfaces/
+ros2_interfaces/diagnostic_msgs/                         https://github.com/ros2/common_interfaces/tree/rolling/diagnostic_msgs/
+ros2_interfaces/example_interfaces/                      https://github.com/ros2/example_interfaces/tree/rolling/
+ros2_interfaces/geometry_msgs/                           https://github.com/ros2/common_interfaces/tree/rolling/geometry_msgs/
+ros2_interfaces/lifecycle_msgs/                          https://github.com/ros2/rcl_interfaces/tree/rolling/lifecycle_msgs/
+ros2_interfaces/nav_msgs/                                https://github.com/ros2/common_interfaces/tree/rolling/nav_msgs/
+ros2_interfaces/rcl_interfaces/                          https://github.com/ros2/rcl_interfaces/tree/rolling/rcl_interfaces/
+ros2_interfaces/rosgraph_msgs/                           https://github.com/ros2/rcl_interfaces/tree/rolling/rosgraph_msgs/
+ros2_interfaces/sensor_msgs/                             https://github.com/ros2/common_interfaces/tree/rolling/sensor_msgs/
+ros2_interfaces/service_msgs/                            https://github.com/ros2/rcl_interfaces/tree/rolling/service_msgs/
+ros2_interfaces/shape_msgs/                              https://github.com/ros2/common_interfaces/tree/rolling/shape_msgs/
+ros2_interfaces/statistics_msgs/                         https://github.com/ros2/rcl_interfaces/tree/rolling/statistics_msgs/
+ros2_interfaces/std_msgs/                                https://github.com/ros2/common_interfaces/tree/rolling/std_msgs/
+ros2_interfaces/std_srvs/                                https://github.com/ros2/common_interfaces/tree/rolling/std_srvs/
+ros2_interfaces/stereo_msgs/                             https://github.com/ros2/common_interfaces/tree/rolling/stereo_msgs/
+ros2_interfaces/test_msgs/                               https://github.com/ros2/test_interface_files/tree/rolling/
+ros2_interfaces/test_msgs/action/NestedMessage.action    https://github.com/ros2/rcl_interfaces/blob/rolling/test_msgs/action/NestedMessage.action
+ros2_interfaces/test_msgs/msg/Builtins.msg               https://github.com/ros2/rcl_interfaces/blob/rolling/test_msgs/msg/Builtins.msg
+ros2_interfaces/test_msgs/msg/ComplexNestedKey.idl       https://github.com/ros2/rcl_interfaces/blob/rolling/test_msgs/msg/ComplexNestedKey.idl
+ros2_interfaces/test_msgs/msg/KeyedLong.idl              https://github.com/ros2/rcl_interfaces/blob/rolling/test_msgs/msg/KeyedLong.idl
+ros2_interfaces/test_msgs/msg/KeyedString.idl            https://github.com/ros2/rcl_interfaces/blob/rolling/test_msgs/msg/KeyedString.idl
+ros2_interfaces/test_msgs/msg/NonKeyedWithNestedKey.idl  https://github.com/ros2/rcl_interfaces/blob/rolling/test_msgs/msg/NonKeyedWithNestedKey.idl
+ros2_interfaces/trajectory_msgs/                         https://github.com/ros2/common_interfaces/tree/rolling/trajectory_msgs/
+ros2_interfaces/type_description_interfaces/             https://github.com/ros2/rcl_interfaces/tree/rolling/type_description_interfaces/
+ros2_interfaces/unique_identifier_msgs/                  https://github.com/ros2/unique_identifier_msgs/tree/rolling/
+ros2_interfaces/visualization_msgs/                      https://github.com/ros2/common_interfaces/tree/rolling/visualization_msgs/
